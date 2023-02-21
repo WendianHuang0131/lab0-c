@@ -36,10 +36,10 @@ void q_free(struct list_head *l)
 /* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
-    element_t *newElement = (element_t *) malloc(sizeof(element_t));
+    element_t *newElement = malloc(sizeof(element_t));
     newElement->value = malloc(strlen(s) + 1);
     strncpy(newElement->value, s, strlen(s));
-    s[strlen(s)] = '\0';
+    newElement->value[strlen(s)] = '\0';
     list_add(&newElement->list, head);
     return true;
 }
@@ -50,7 +50,7 @@ bool q_insert_tail(struct list_head *head, char *s)
     element_t *newElement = malloc(sizeof(element_t));
     newElement->value = malloc(strlen(s) + 1);
     strncpy(newElement->value, s, strlen(s));
-    s[strlen(s)] = '\0';
+    newElement->value[strlen(s)] = '\0';
 
     list_add_tail(&newElement->list, head);
     return true;
@@ -108,6 +108,49 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+    struct list_head *cur, *tail = NULL;
+    bool isUniqueNum = true;
+    list_for_each (cur, head) {
+        if (cur->next != head) {
+            if (isUniqueNum) {
+                if (*list_entry(cur, element_t, list)->value ==
+                    *list_entry(cur->next, element_t, list)->value) {
+                    isUniqueNum = false;
+                } else {
+                    if (!tail) {
+                        head->next = cur;
+                        cur->prev = head;
+                        tail = cur;
+                    } else {
+                        tail->next = cur;
+                        cur->prev = tail;
+                        tail = tail->next;
+                    }
+                }
+            } else {
+                if (*list_entry(cur, element_t, list)->value !=
+                    *list_entry(cur->next, element_t, list)->value) {
+                    isUniqueNum = true;
+                }
+            }
+        } else {
+            if (isUniqueNum) {
+                if (!tail) {
+                    head->next = cur;
+                    cur->prev = head;
+                } else {
+                    tail->next = cur;
+                    cur->prev = tail;
+                    tail = tail->next;
+                }
+            }
+        }
+    }
+    if (tail) {
+        tail->next = head;
+        head->prev = tail;
+    }
+
     return true;
 }
 
