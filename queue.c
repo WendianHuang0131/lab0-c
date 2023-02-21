@@ -56,29 +56,61 @@ bool q_insert_tail(struct list_head *head, char *s)
     return true;
 }
 
+/**
+ * q_remove_head() - Remove the element from head of queue
+ * @head: header of queue
+ * @sp: string would be inserted
+ * @bufsize: size of the string
+ *
+ * If sp is non-NULL and an element is removed, copy the removed string to *sp
+ * (up to a maximum of bufsize-1 characters, plus a null terminator.)
+ *
+ * NOTE: "remove" is different from "delete"
+ * The space used by the list element and the string should not be freed.
+ * The only thing "remove" need to do is unlink it.
+ *
+ * Reference:
+ * https://english.stackexchange.com/questions/52508/difference-between-delete-and-remove
+ *
+ * Return: the pointer to element, %NULL if queue is NULL or empty.
+ */
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    element_t *element = list_entry(head, element_t, list);
+    if (q_size(head) == 0)
+        return NULL;
 
-    if (element) {
+    element_t *element = list_entry(head->next, element_t, list);
+
+    if (sp) {
         strncpy(sp, element->value, bufsize);
     }
-    list_del(head);
+    list_del(head->next);
 
 
     return element;
 }
 
+/**
+ * q_remove_tail() - Remove the element from tail of queue
+ * @head: header of queue
+ * @sp: string would be inserted
+ * @bufsize: size of the string
+ *
+ * Return: the pointer to element, %NULL if queue is NULL or empty.
+ */
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    element_t *element = list_last_entry(head, element_t, list);
+    if (q_size(head) == 0)
+        return NULL;
 
-    if (element) {
+    element_t *element = list_entry(head->prev, element_t, list);
+
+    if (sp) {
         strncpy(sp, element->value, bufsize);
     }
-    list_del(head);
+    list_del(head->prev);
 
     return element;
 }
@@ -302,6 +334,5 @@ int q_descend(struct list_head *head)
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
-    // https://leetcode.com/problems/merge-k-sorted-lists/
     return 0;
 }
