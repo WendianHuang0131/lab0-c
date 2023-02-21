@@ -230,8 +230,48 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
-/* Sort elements of queue in ascending order */
-void q_sort(struct list_head *head) {}
+int cmpChar(const void *p1, const void *p2)
+{
+    const char *c1 = (const char *) p1;
+    const char *c2 = (const char *) p2;
+    return *c1 - *c2;
+}
+
+
+/**
+ * q_sort() - Sort elements of queue in ascending order
+ * @head: header of queue
+ *
+ * No effect if queue is NULL or empty. If there has only one element, do
+ * nothing.
+ */
+void q_sort(struct list_head *head)
+{
+    if (list_empty(head) || list_is_singular(head))
+        return;
+
+    struct list_head list_less, list_greater;
+    INIT_LIST_HEAD(&list_less);
+    INIT_LIST_HEAD(&list_greater);
+
+    element_t *pivot = list_first_entry(head, element_t, list);
+    list_del(&pivot->list);
+
+    element_t *itm = NULL, *is = NULL;
+    list_for_each_entry_safe (itm, is, head, list) {  // CCC
+        if (cmpChar(itm->value, pivot->value) < 0)
+            list_move(&itm->list, &list_less);  // DDD
+        else
+            list_move(&itm->list, &list_greater);  // EEE
+    }
+
+    q_sort(&list_less);
+    q_sort(&list_greater);
+
+    list_add(&pivot->list, head);
+    list_splice(&list_less, head);
+    list_splice_tail(&list_greater, head);  // FFF
+}
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
