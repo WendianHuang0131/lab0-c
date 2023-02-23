@@ -374,7 +374,7 @@ int q_descend(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     if (q_size(head) > 1) {
-        struct list_head *node;
+        struct list_head *node, *temp;
         struct list_head *minNode = head->prev;
         // for (node = head->prev->prev; node != head; node = node->prev) {
         //     if (*list_entry(node, element_t, list)->value >=
@@ -386,7 +386,7 @@ int q_descend(struct list_head *head)
         //         minNode = node;
         //     }
         // }
-        node = head->prev->prev;
+        node = minNode->prev;
         while (node != head) {
             if (*list_entry(node, element_t, list)->value >=
                 *list_entry(minNode, element_t, list)->value) {
@@ -397,17 +397,21 @@ int q_descend(struct list_head *head)
                 minNode = node;
                 node = node->prev;
             } else {
+                temp = node;
                 node = node->prev;
-                q_release_element(list_entry(node->next, element_t, list));
+                list_del(temp);
+                q_release_element(list_entry(temp, element_t, list));
             }
         }
 
 
 
-        node = minNode;
+        // node = minNode;
         while (node != head) {
+            temp = node;
             node = node->prev;
-            q_release_element(list_entry(node->next, element_t, list));
+            list_del(temp);
+            q_release_element(list_entry(temp, element_t, list));
         }
         if (minNode->prev != head) {
             printf("Wrong!!!");
