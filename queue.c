@@ -40,15 +40,15 @@ bool q_insert_head(struct list_head *head, char *s)
 {
     if (!head)
         return false;
-    element_t *newElement = malloc(sizeof(element_t));
-    if (!newElement)
+    element_t *element = malloc(sizeof(element_t));
+    if (!element)
         return false;
-    newElement->value = strdup(s);
-    if (!newElement->value) {
-        free(newElement);
+    element->value = strdup(s);
+    if (!element->value) {
+        free(element);
         return false;
     }
-    list_add(&newElement->list, head);
+    list_add(&element->list, head);
     return true;
 }
 
@@ -57,15 +57,15 @@ bool q_insert_tail(struct list_head *head, char *s)
 {
     if (!head)
         return false;
-    element_t *newElement = malloc(sizeof(element_t));
-    if (!newElement)
+    element_t *element = malloc(sizeof(element_t));
+    if (!element)
         return false;
-    newElement->value = strdup(s);
-    if (!newElement->value) {
-        free(newElement);
+    element->value = strdup(s);
+    if (!element->value) {
+        free(element);
         return false;
     }
-    list_add_tail(&newElement->list, head);
+    list_add_tail(&element->list, head);
     return true;
 }
 
@@ -90,17 +90,16 @@ bool q_insert_tail(struct list_head *head, char *s)
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (q_size(head) == 0)
+    if (!head || list_empty(head))
         return NULL;
 
-    element_t *element = list_entry(head->next, element_t, list);
-
+    element_t *element = list_first_entry(head, element_t, list);
+    list_del(&element->list);
     if (sp) {
-        strncpy(sp, element->value, bufsize);
-        sp[bufsize - 1] = '\0';
+        for (char *i = element->value; bufsize > 1 && *i; sp++, i++, bufsize--)
+            *sp = *i;
+        *sp = '\0';
     }
-    list_del(head->next);
-
 
     return element;
 }
@@ -116,16 +115,16 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (q_size(head) == 0)
+    if (!head || list_empty(head))
         return NULL;
 
-    element_t *element = list_entry(head->prev, element_t, list);
-
+    element_t *element = list_last_entry(head, element_t, list);
+    list_del(&element->list);
     if (sp) {
-        strncpy(sp, element->value, bufsize);
-        sp[bufsize - 1] = '\0';
+        for (char *i = element->value; bufsize > 1 && *i; sp++, i++, bufsize--)
+            *sp = *i;
+        *sp = '\0';
     }
-    list_del(head->prev);
 
     return element;
 }
@@ -176,6 +175,7 @@ bool q_delete_dup(struct list_head *head)
             if (isUniqueNum) {
                 if (*list_entry(cur, element_t, list)->value ==
                     *list_entry(cur->next, element_t, list)->value) {
+                    list_del(cur);
                     q_release_element(list_entry(cur, element_t, list));
                     isUniqueNum = false;
                 } else {
@@ -192,8 +192,12 @@ bool q_delete_dup(struct list_head *head)
             } else {
                 if (*list_entry(cur, element_t, list)->value !=
                     *list_entry(cur->next, element_t, list)->value) {
+                    list_del(cur);
                     q_release_element(list_entry(cur, element_t, list));
                     isUniqueNum = true;
+                } else {
+                    list_del(cur);
+                    q_release_element(list_entry(cur, element_t, list));
                 }
             }
         } else {
@@ -207,10 +211,12 @@ bool q_delete_dup(struct list_head *head)
                     tail = tail->next;
                 }
             } else {
+                list_del(cur);
                 q_release_element(list_entry(cur, element_t, list));
             }
         }
     }
+    printf(" tail is null : %d \n", tail == NULL);
     if (tail) {
         tail->next = head;
         head->prev = tail;
