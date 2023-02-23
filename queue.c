@@ -173,8 +173,9 @@ bool q_delete_dup(struct list_head *head)
     list_for_each_safe (cur, sp, head) {
         if (cur->next != head) {
             if (isUniqueNum) {
-                if (*list_entry(cur, element_t, list)->value ==
-                    *list_entry(cur->next, element_t, list)->value) {
+                if (strcmp(list_entry(cur, element_t, list)->value,
+                           list_entry(cur->next, element_t, list)->value) ==
+                    0) {
                     list_del(cur);
                     q_release_element(list_entry(cur, element_t, list));
                     isUniqueNum = false;
@@ -190,8 +191,9 @@ bool q_delete_dup(struct list_head *head)
                     }
                 }
             } else {
-                if (*list_entry(cur, element_t, list)->value !=
-                    *list_entry(cur->next, element_t, list)->value) {
+                if (strcmp(list_entry(cur, element_t, list)->value,
+                           list_entry(cur->next, element_t, list)->value) !=
+                    0) {
                     list_del(cur);
                     q_release_element(list_entry(cur, element_t, list));
                     isUniqueNum = true;
@@ -354,7 +356,7 @@ void q_sort(struct list_head *head)
 
     element_t *itm = NULL, *is = NULL;
     list_for_each_entry_safe (itm, is, head, list) {  // CCC
-        if (cmpChar(itm->value, pivot->value) < 0)
+        if (strcmp(itm->value, pivot->value) < 0)
             list_move(&itm->list, &list_less);  // DDD
         else
             list_move(&itm->list, &list_greater);  // EEE
@@ -388,8 +390,8 @@ int q_descend(struct list_head *head)
         // }
         node = minNode->prev;
         while (node != head) {
-            if (*list_entry(node, element_t, list)->value >=
-                *list_entry(minNode, element_t, list)->value) {
+            if (strcmp(list_entry(node, element_t, list)->value,
+                       list_entry(minNode, element_t, list)->value) >= 0) {
                 if (node->next != minNode) {
                     minNode->prev = node;
                     node->next = minNode;
@@ -412,9 +414,6 @@ int q_descend(struct list_head *head)
             node = node->prev;
             list_del(temp);
             q_release_element(list_entry(temp, element_t, list));
-        }
-        if (minNode->prev != head) {
-            printf("Wrong!!!");
         }
         minNode->prev = head;
         head->next = minNode;

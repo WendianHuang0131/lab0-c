@@ -16,9 +16,5 @@ ih r
 ih c
 ih z
 sort
-merge
+# merge
 reverse
-rh z
-rh r
-rh r
-rh n
