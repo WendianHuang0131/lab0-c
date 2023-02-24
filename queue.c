@@ -423,30 +423,13 @@ int q_descend(struct list_head *head)
 
 
 //////
-struct list_head *mergeTwoList(struct list_head *l1head,
-                               struct list_head *l2head)
+void mergeTwoList(struct list_head *l1head, struct list_head *l2head)
 {
-    struct list_head *rt = l1head;
-    // struct list_head *cur = &rt;
     struct list_head *l1 = l1head->next, *l2 = l2head->next;
-    // printList(l1head);
-    // printList(l2head);
-    // printf("%p \n", l1);
-    // printf("%p \n", l1head);
-    // printf("%p \n", l2);
-    // printf("%p \n", l2head);
 
-
-
-    printf("test=================");
-    printf("%d \n", l1 == l1head);
-    printf("%d \n ", l2 == l2head);
-    // printf("l1 = l1head : %d, l2 = l2head : %d", l1 == l1head, l2 == l2head);
-    // INIT_LIST_HEAD(rt);
-    printf("test=================");
     while (l1 != l1head && l2 != l2head) {
-        if (*list_entry(l1, element_t, list)->value <=
-            *list_entry(l2, element_t, list)->value) {
+        if (strcmp(list_entry(l1, element_t, list)->value,
+                   list_entry(l2, element_t, list)->value) <= 0) {
             l1 = l1->next;
         } else {
             l2 = l2->next;
@@ -456,9 +439,8 @@ struct list_head *mergeTwoList(struct list_head *l1head,
         }
     }
     if (l2 != l2head)
-        list_splice_tail(l2head, rt);
+        list_splice_tail(l2head, l1);
     INIT_LIST_HEAD(l2head);
-    return rt;
 }
 
 
@@ -481,30 +463,42 @@ struct list_head *mergeTwoList(struct list_head *l1head,
  * Return: the number of elements in queue after merging
  */
 
+void IndPrintList(struct list_head **head, int num)
+{
+    struct list_head *cur = *head;
+    cur = cur->next;
+    printf("%p\n", *head);
+    printf("print list : \n");
+    while (num--) {
+        printf("%p\n", cur);
+        printf("-------------\n");
+        printf("%c  ", *list_entry(cur, element_t, list)->value);
+        cur = cur->next;
+    }
+    printf("head : %p\n", cur);
+    printf("\n");
+    printf("ttt");
+}
+
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    // struct list_head *cur = head -> next;
-    // int length = 0;
-    // while(cur != head){
-    //     queue_contex_t *q_contex = list_entry(cur, queue_contex_t, chain);
-    //     // printList(q_contex -> q);
-    //     if(q_contex -> size == 0)
-    //         continue;
+    if (!head || head->next == head) {
+        return 0;
+    }
 
-    //     length += q_contex -> size;
-    //     //head = mergeTwoList()
-    //     cur = cur -> next;
-    // }
 
-    // queue_contex_t *q1 = list_entry(head->next, queue_contex_t, chain);
-    // queue_contex_t *q2 = list_entry(head->next->next, queue_contex_t, chain);
+    queue_contex_t *firstQ = list_first_entry(head, queue_contex_t, chain);
+    struct list_head *cur = head->next->next;
 
-    // // printList(q1->q);
-    // // printList(q2->q);
-    // head = mergeTwoList(q1->q, q2->q);
-    // head = mergeTwoList(&q1 -> chain, &q2 -> chain);
+    int length = firstQ->size;
+    while (cur != head) {
+        queue_contex_t *curQ = list_entry(cur, queue_contex_t, chain);
+        mergeTwoList(firstQ->q, curQ->q);
+        length += curQ->size;
+        cur = cur->next;
+    }
 
-    return 8;
+    return length;
 }
