@@ -35,7 +35,6 @@ void q_free(struct list_head *l)
     }
 }
 
-/* Insert an element at head of queue */
 bool q_insert_head(struct list_head *head, char *s)
 {
     if (!head)
@@ -87,46 +86,45 @@ bool q_insert_tail(struct list_head *head, char *s)
  *
  * Return: the pointer to element, %NULL if queue is NULL or empty.
  */
-/* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (!head || list_empty(head))
+    if (!head || list_empty(head)) {
         return NULL;
-
-    element_t *element = list_first_entry(head, element_t, list);
-    list_del(&element->list);
-    if (sp) {
-        for (char *i = element->value; bufsize > 1 && *i; sp++, i++, bufsize--)
-            *sp = *i;
-        *sp = '\0';
     }
 
-    return element;
+    // copy the info of removed-element into sp
+    element_t *rm_node = container_of(head->next, element_t, list);
+
+    if (sp) {
+        strncpy(sp, rm_node->value, bufsize - 1);
+        strncpy(sp + (bufsize - 1), "\0", 1);
+    }
+
+    // delete the first node
+    list_del(head->next);
+
+    return rm_node;
 }
 
-/**
- * q_remove_tail() - Remove the element from tail of queue
- * @head: header of queue
- * @sp: string would be inserted
- * @bufsize: size of the string
- *
- * Return: the pointer to element, %NULL if queue is NULL or empty.
- */
 /* Remove an element from tail of queue */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    if (!head || list_empty(head))
+    if (!head || list_empty(head)) {
         return NULL;
-
-    element_t *element = list_last_entry(head, element_t, list);
-    list_del(&element->list);
-    if (sp) {
-        for (char *i = element->value; bufsize > 1 && *i; sp++, i++, bufsize--)
-            *sp = *i;
-        *sp = '\0';
     }
 
-    return element;
+    // copy the info of removed-element into sp
+    element_t *rm_node = container_of(head->prev, element_t, list);
+
+    if (sp) {
+        strncpy(sp, rm_node->value, bufsize - 1);
+        strncpy(sp + (bufsize - 1), "\0", 1);
+    }
+
+    // delete the first node
+    list_del(head->prev);
+
+    return rm_node;
 }
 
 /* Return number of elements in queue */
@@ -335,39 +333,101 @@ int cmpChar(const void *p1, const void *p2)
 }
 
 
-/**
- * q_sort() - Sort elements of queue in ascending order
- * @head: header of queue
- *
- * No effect if queue is NULL or empty. If there has only one element, do
- * nothing.
- */
-void q_sort(struct list_head *head)
+// /**
+//  * q_sort() - Sort elements of queue in ascending order
+//  * @head: header of queue
+//  *
+//  * No effect if queue is NULL or empty. If there has only one element, do
+//  * nothing.
+//  */
+// void q_sort(struct list_head *head)
+// {
+//     if (list_empty(head) || list_is_singular(head))
+//         return;
+
+//     struct list_head list_less, list_greater;
+//     INIT_LIST_HEAD(&list_less);
+//     INIT_LIST_HEAD(&list_greater);
+
+//     element_t *pivot = list_first_entry(head, element_t, list);
+//     list_del(&pivot->list);
+
+//     element_t *itm = NULL, *is = NULL;
+//     list_for_each_entry_safe (itm, is, head, list) {  // CCC
+//         if (strcmp(itm->value, pivot->value) < 0)
+//             list_move(&itm->list, &list_less);  // DDD
+//         else
+//             list_move(&itm->list, &list_greater);  // EEE
+//     }
+
+//     q_sort(&list_less);
+//     q_sort(&list_greater);
+
+//     list_add(&pivot->list, head);
+//     list_splice(&list_less, head);
+//     list_splice_tail(&list_greater, head);  // FFF
+// }
+
+static struct list_head *mergeTwoList(struct list_head *left,
+                                      struct list_head *right)
 {
-    if (list_empty(head) || list_is_singular(head))
-        return;
+    struct list_head *head = NULL;
+    struct list_head **ptr = &head;
 
-    struct list_head list_less, list_greater;
-    INIT_LIST_HEAD(&list_less);
-    INIT_LIST_HEAD(&list_greater);
+    for (; left && right; ptr = &(*ptr)->next) {
+        char *l1_value = list_entry(left, element_t, list)->value;
+        char *l2_value = list_entry(right, element_t, list)->value;
 
-    element_t *pivot = list_first_entry(head, element_t, list);
-    list_del(&pivot->list);
-
-    element_t *itm = NULL, *is = NULL;
-    list_for_each_entry_safe (itm, is, head, list) {  // CCC
-        if (strcmp(itm->value, pivot->value) < 0)
-            list_move(&itm->list, &list_less);  // DDD
-        else
-            list_move(&itm->list, &list_greater);  // EEE
+        if (strcmp(l1_value, l2_value) <= 0) {
+            (*ptr) = left;
+            left = left->next;
+        } else {
+            (*ptr) = right;
+            right = right->next;
+        }
     }
 
-    q_sort(&list_less);
-    q_sort(&list_greater);
+    if (left) {
+        *ptr = left;
+    }
+    if (right) {
+        *ptr = right;
+    }
 
-    list_add(&pivot->list, head);
-    list_splice(&list_less, head);
-    list_splice_tail(&list_greater, head);  // FFF
+    return head;
+}
+
+
+struct list_head *merge_sort(struct list_head *head)
+{
+    if (!head || !head->next)
+        return head;
+    struct list_head *slow = head;
+    for (struct list_head *fast = head->next; fast && fast->next;
+         fast = fast->next->next)
+        slow = slow->next;
+    struct list_head *mid = slow->next;
+    slow->next = NULL;
+
+    struct list_head *left = merge_sort(head);
+    struct list_head *right = merge_sort(mid);
+
+    return mergeTwoList(left, right);
+}
+
+void q_sort(struct list_head *head)
+{
+    if (!head || list_empty(head))
+        return;
+
+    head->prev->next = NULL;
+    head->next = merge_sort(head->next);
+
+    struct list_head *ptr = head;
+    for (; ptr->next; ptr = ptr->next)
+        ptr->next->prev = ptr;
+    ptr->next = head;
+    head->prev = ptr;
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -423,7 +483,7 @@ int q_descend(struct list_head *head)
 
 
 //////
-void mergeTwoList(struct list_head *l1head, struct list_head *l2head)
+void mergeTwoList_2(struct list_head *l1head, struct list_head *l2head)
 {
     struct list_head *l1 = l1head->next, *l2 = l2head->next;
 
