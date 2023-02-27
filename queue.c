@@ -281,18 +281,6 @@ void q_reverse(struct list_head *head)
     }
 }
 
-void printList(struct list_head *head)
-{
-    struct list_head *cur = head->next;
-    printf("print list : ");
-    while (cur != head) {
-        printf("%c  ", *list_entry(cur, element_t, list)->value);
-        cur = cur->next;
-    }
-    printf("\n");
-    printf("ttt");
-}
-
 void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
@@ -332,41 +320,6 @@ int cmpChar(const void *p1, const void *p2)
     return *c1 - *c2;
 }
 
-
-// /**
-//  * q_sort() - Sort elements of queue in ascending order
-//  * @head: header of queue
-//  *
-//  * No effect if queue is NULL or empty. If there has only one element, do
-//  * nothing.
-//  */
-// void q_sort(struct list_head *head)
-// {
-//     if (list_empty(head) || list_is_singular(head))
-//         return;
-
-//     struct list_head list_less, list_greater;
-//     INIT_LIST_HEAD(&list_less);
-//     INIT_LIST_HEAD(&list_greater);
-
-//     element_t *pivot = list_first_entry(head, element_t, list);
-//     list_del(&pivot->list);
-
-//     element_t *itm = NULL, *is = NULL;
-//     list_for_each_entry_safe (itm, is, head, list) {  // CCC
-//         if (strcmp(itm->value, pivot->value) < 0)
-//             list_move(&itm->list, &list_less);  // DDD
-//         else
-//             list_move(&itm->list, &list_greater);  // EEE
-//     }
-
-//     q_sort(&list_less);
-//     q_sort(&list_greater);
-
-//     list_add(&pivot->list, head);
-//     list_splice(&list_less, head);
-//     list_splice_tail(&list_greater, head);  // FFF
-// }
 
 static struct list_head *mergeTwoList(struct list_head *left,
                                       struct list_head *right)
@@ -438,16 +391,6 @@ int q_descend(struct list_head *head)
     if (q_size(head) > 1) {
         struct list_head *node, *temp;
         struct list_head *minNode = head->prev;
-        // for (node = head->prev->prev; node != head; node = node->prev) {
-        //     if (*list_entry(node, element_t, list)->value >=
-        //         *list_entry(minNode, element_t, list)->value) {
-        //         if (node->next != minNode) {
-        //             minNode->prev = node;
-        //             node->next = minNode;
-        //         }
-        //         minNode = node;
-        //     }
-        // }
         node = minNode->prev;
         while (node != head) {
             if (strcmp(list_entry(node, element_t, list)->value,
@@ -522,24 +465,6 @@ void mergeTwoList_2(struct list_head *l1head, struct list_head *l2head)
  *
  * Return: the number of elements in queue after merging
  */
-
-void IndPrintList(struct list_head **head, int num)
-{
-    struct list_head *cur = *head;
-    cur = cur->next;
-    printf("%p\n", *head);
-    printf("print list : \n");
-    while (num--) {
-        printf("%p\n", cur);
-        printf("-------------\n");
-        printf("%c  ", *list_entry(cur, element_t, list)->value);
-        cur = cur->next;
-    }
-    printf("head : %p\n", cur);
-    printf("\n");
-    printf("ttt");
-}
-
 /* Merge all the queues into one sorted queue, which is in ascending order */
 int q_merge(struct list_head *head)
 {
