@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,57 +15,100 @@
 /* Create an empty queue */
 struct list_head *q_new()
 {
-    struct list_head *qHead = malloc(sizeof(struct list_head));
-    if (!qHead)
+    struct list_head *head = malloc(sizeof(struct list_head));
+
+    if (!head)
         return NULL;
-    INIT_LIST_HEAD(qHead);
-    return qHead;
+
+    INIT_LIST_HEAD(head);
+
+    return head;
 }
 
 /* Free all storage used by queue */
 void q_free(struct list_head *l)
 {
-    if (l) {
-        element_t *entry;
-        element_t *safe;
-        list_for_each_entry_safe (entry, safe, l, list) {
-            free(entry->value);
-            free(entry);
+    if (!l)
+        return;
+
+    if (!list_is_singular(l)) {
+        struct list_head *cur, *safe;
+
+        list_for_each_safe (cur, safe, l) {
+            list_del(cur);
+            q_release_element(container_of(cur, element_t, list));
         }
-        free(l);
     }
+
+    free(l);
 }
 
+/**
+ * q_insert_head() - Insert an element in the head
+ * @head: header of queue
+ * @s: string would be inserted
+ *
+ * Argument s points to the string to be stored.
+ * The function must explicitly allocate space and copy the string into it.
+ *
+ * Return: true for success, false for allocation failed or queue is NULL
+ */
 bool q_insert_head(struct list_head *head, char *s)
 {
     if (!head)
+        return NULL;
+
+    element_t *new_node = (element_t *) malloc(sizeof(element_t));
+
+    if (!new_node)
         return false;
-    element_t *element = malloc(sizeof(element_t));
-    if (!element)
-        return false;
-    element->value = strdup(s);
-    if (!element->value) {
-        free(element);
-        return false;
+
+    /*
+        problem: if directly assign s to new_node->value, it will cause seg
+       fault. Since the lifetime of s is only in this function
+        Solution:
+            Step 1. calculate the length of s
+            Step 2. create a space which has same size to s
+            Step 3. use 'memcpy' to copy memory info to new space
+    */
+
+    // step 1
+    int len = strlen(s);
+
+    // step 2
+    char *s_copy = (char *) malloc(sizeof(char) * len + 1);
+    if (!s_copy) {
+        free(new_node);
+        return NULL;
     }
-    list_add(&element->list, head);
+
+    // step 3
+    memcpy(s_copy, s, sizeof(char) * len + 1);
+    new_node->value = s_copy;
+    list_add(&new_node->list, head);
+
     return true;
 }
 
 /* Insert an element at tail of queue */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    if (!head)
+    element_t *new_node = (element_t *) malloc(sizeof(element_t));
+
+    if (!new_node)
         return false;
-    element_t *element = malloc(sizeof(element_t));
-    if (!element)
-        return false;
-    element->value = strdup(s);
-    if (!element->value) {
-        free(element);
-        return false;
+
+    int len = strlen(s);
+    char *s_copy = (char *) malloc(sizeof(char) * len + 1);
+    if (!s_copy) {
+        free(new_node);
+        return NULL;
     }
-    list_add_tail(&element->list, head);
+
+    memcpy(s_copy, s, sizeof(char) * len + 1);
+    new_node->value = s_copy;
+    list_add_tail(&new_node->list, head);
+
     return true;
 }
 
@@ -216,7 +260,6 @@ bool q_delete_dup(struct list_head *head)
             }
         }
     }
-    printf(" tail is null : %d \n", tail == NULL);
     if (tail) {
         tail->next = head;
         head->prev = tail;
